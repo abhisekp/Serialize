@@ -2,6 +2,7 @@ package com.abhisekp;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 
 /**
  * <h1>Test Serialization</h1>
@@ -11,10 +12,31 @@ import java.awt.*;
  * @version 0.1.0
  * @since 0.1.0
  */
-public class Test {
+public class Test implements Serializable {
 
 	private String name;
 	private int age;
+	transient private final GUI gui;
+	private static Test test;
+	transient private File file;
+	static final long serialVersionUID = 1;
+
+	public static void main(String[] args) {
+		test = new Test();
+	}
+
+	public Test() {
+		file = new File("test.ser");
+		name = "Abhisek Pattnaik";
+		age = 23;
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
+		gui = new GUI();
+	}
 
 	private class GUI extends JFrame {
 		private JPanel mainPanel;
@@ -34,15 +56,11 @@ public class Test {
 			/**
 			 * Configure frame
 			 */
-			try {
-				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-				e.printStackTrace();
-			}
-			setDefaultLookAndFeelDecorated(true);
+			setSize(300, 200);
+			setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			add(mainPanel);
-			setTitle(name + " - " + age);
-			pack();
+			updateTitle();
+			setResizable(false);
 			setLocationRelativeTo(null);
 			setVisible(true);
 		}
@@ -53,15 +71,31 @@ public class Test {
 			 */
 			mainPanel = new JPanel();
 			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+			mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 			// Create temporary panels
-			JPanel agePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 1, 2));
+			JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 2));
+			namePanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+			namePanel.setSize(300, 10);
+
+			JPanel agePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 2));
+			agePanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+
 			JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 2));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+
+			JPanel randomBTNPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 2));
+			randomBTNPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
 			// Create Labels
 			nameLabel = new JLabel(name, SwingConstants.CENTER);
+			nameLabel.setFont(new Font("Georgia", Font.BOLD, 24));
+
 			ageLabel = new JLabel("Age: ", SwingConstants.LEFT);
-			ageValueLabel = new JLabel(Integer.toString(age), SwingConstants.RIGHT);
+			ageLabel.setFont(new Font("Verdana", Font.BOLD, 16));
+
+			ageValueLabel = new JLabel(Integer.toString(age, 10), SwingConstants.RIGHT);
+			ageValueLabel.setFont(new Font("Verdana", Font.PLAIN, 16));
 
 			// Create Buttons
 			randomBTN = new JButton("Randomize");
@@ -71,23 +105,83 @@ public class Test {
 			/**
 			 * Add Components to Panels
 			 */
-			// Add Labels to Label Panel
+			// Add NameLabel to namePanel
+			namePanel.add(nameLabel);
+
+			// Add Labels to Age Panel
 			agePanel.add(ageLabel);
 			agePanel.add(ageValueLabel);
+
+			// Add Random Button to RandomBTN Panel
+			randomBTNPanel.add(randomBTN);
 
 			// Add Buttons to Button Panel
 			buttonPanel.add(saveBTN);
 			buttonPanel.add(loadBTN);
 
 			// Add Components to Main Panel
-			mainPanel.add(nameLabel);
+			mainPanel.add(namePanel);
 			mainPanel.add(agePanel);
-			mainPanel.add(randomBTN);
+			mainPanel.add(randomBTNPanel);
 			mainPanel.add(buttonPanel);
 		}
 
 		private void addListeners() {
 			// Add listeners for Buttons
+			randomBTN.addActionListener(e -> randomizeAge());
+			saveBTN.addActionListener(e -> save());
+			loadBTN.addActionListener(e -> load());
 		}
+
+		public void randomizeAge() {
+			age = 1 + (int) (Math.random() * 150);
+			updateGUI();
+			System.out.println("Randomized age = " + age);
+		}
+
+		public void updateTitle() {
+			setTitle(name + " - Age " + age);
+		}
+
+		public void updateAgeLabel() {
+			ageValueLabel.setText(Integer.toString(age, 10));
+		}
+	}
+
+	public void save() {
+		// serialization
+		try {
+			FileOutputStream fos = new FileOutputStream(file);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(this);
+			oos.close();
+			System.out.println("File Location: " + file.getAbsolutePath());
+			System.out.println("Saved Age = " + age);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void load() {
+		// deserializarion
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			test = (Test) ois.readObject();
+			age = test.age;
+			ois.close();
+
+			System.out.println("File Location: " + file.getAbsolutePath());
+			System.out.println("Loaded Age = " + age);
+			updateGUI();
+
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void updateGUI() {
+		gui.updateAgeLabel();
+		gui.updateTitle();
 	}
 }
