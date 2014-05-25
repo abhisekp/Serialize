@@ -168,6 +168,7 @@ public class Test implements Serializable {
 			FileInputStream fis = new FileInputStream(file);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			test = (Test) ois.readObject();
+			age = test.age;
 			ois.close();
 
 			System.out.println("File Location: " + file.getAbsolutePath());
