@@ -133,6 +133,9 @@ public class Test implements Serializable {
 			loadBTN.addActionListener(e -> load());
 		}
 
+		/**
+		 * Randomize age
+		 */
 		public void randomizeAge() {
 			age = 1 + (int) (Math.random() * 150);
 			updateGUI();
@@ -148,6 +151,10 @@ public class Test implements Serializable {
 		}
 	}
 
+	/**
+	 * Saves file
+	 * @since 0.1.0
+	 */
 	public void save() {
 		// serialization
 		try {
@@ -162,13 +169,17 @@ public class Test implements Serializable {
 		}
 	}
 
+	/**
+	 * Loads saved file
+	 * @since 0.1.0
+	 */
 	public void load() {
-		// deserializarion
+		// deserialization
 		try {
 			FileInputStream fis = new FileInputStream(file);
 			ObjectInputStream ois = new ObjectInputStream(fis);
-			test = (Test) ois.readObject();
-			age = test.age;
+			Test test1 = (Test) ois.readObject();
+			age = test1.age;
 			ois.close();
 
 			System.out.println("File Location: " + file.getAbsolutePath());
